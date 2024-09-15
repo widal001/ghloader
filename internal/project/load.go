@@ -7,31 +7,24 @@ import (
 	"github.com/widal001/ghloader/internal/graphql"
 )
 
-// GraphQL query to fetch all fields from the GitHub ProjectV2
-const projectV2MetadataQuery = `
-query($login: String!, $projectNumber: Int!) {
-  user(login: $login) {
-    projectV2(number: $projectNumber) {
-	  id
-	  title
-      fields(first: 100) {
-        nodes {
-          ... on ProjectV2FieldCommon {
-            id
-            name
-            type: dataType
-          }
-        }
-      }
-    }
-  }
-}`
-
 // LoadProjectFields fetches all fields of a GitHub ProjectV2
 func LoadProjectMetadata(login string, projectNumber int, projectType string) (*ProjectV2, error) {
+	// Find and load the correct .graphql file based on project type
+	var queryFile string
+	switch projectType {
+	case "orgs":
+		queryFile = "projectV2Metadata/queryOrg.graphql"
+	case "users":
+		queryFile = "ProjectV2Metadata/queryUser.graphql"
+	}
+	query, err := graphql.LoadQuery(queryFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load GraphQL query: %v", err)
+	}
+
 	// Create a request body for the GraphQL query
 	requestBody, err := json.Marshal(map[string]interface{}{
-		"query": projectV2MetadataQuery,
+		"query": query,
 		"variables": map[string]interface{}{
 			"login":         login,
 			"projectNumber": projectNumber,
@@ -48,21 +41,28 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 		return nil, err
 	}
 
+	type projectV2Fragment struct {
+		ProjectV2 struct {
+			Id     string
+			Title  string
+			Fields struct {
+				Nodes []struct {
+					ID   string
+					Name string
+					Type string
+				}
+			}
+		}
+	}
+
 	// Parse the response JSON
 	var response struct {
 		Data struct {
 			User struct {
-				ProjectV2 struct {
-					Id     string
-					Title  string
-					Fields struct {
-						Nodes []struct {
-							ID   string
-							Name string
-							Type string
-						}
-					}
-				}
+				projectV2Fragment
+			}
+			Org struct {
+				projectV2Fragment
 			}
 		}
 	}
@@ -71,9 +71,17 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
+	var projectData projectV2Fragment
+	switch projectType {
+	case "users":
+		projectData = response.Data.User.projectV2Fragment
+	case "orgs":
+		projectData = response.Data.Org.projectV2Fragment
+	}
+
 	// Map fields into a ProjectV2Info struct
 	fieldsMap := make(map[string]ProjectV2Field)
-	for _, node := range response.Data.User.ProjectV2.Fields.Nodes {
+	for _, node := range projectData.ProjectV2.Fields.Nodes {
 		fieldsMap[node.Name] = ProjectV2Field{
 			ID:   node.ID,
 			Name: node.Name,

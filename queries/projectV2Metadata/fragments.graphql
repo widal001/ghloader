@@ -1,0 +1,13 @@
+fragment ProjectV2Metadata on ProjectV2 {
+  id
+  title
+  fields(first: 100) {
+    nodes {
+      ... on ProjectV2FieldCommon {
+        id
+        name
+        type: dataType
+      }
+    }
+  }
+}

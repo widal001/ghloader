@@ -18,11 +18,6 @@ func main() {
 	}
 
 	// Get the type of a specific field
-	pointsField, err := proj.GetFieldType("Story Points")
-	if err != nil {
-		log.Fatalf("Error getting field type: %v", err)
-	}
-	fmt.Printf("The type of 'Story Points' field is: %s\n", pointsField)
 	for fieldName := range proj.Fields {
 		fieldType, err := proj.GetFieldType(fieldName)
 		if err != nil {

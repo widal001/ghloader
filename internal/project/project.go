@@ -48,7 +48,7 @@ func FromURL(projectURL string) (*ProjectV2, error) {
 		return nil, fmt.Errorf("failed to parse URL: %v", err)
 	}
 
-	// Split the path params into segments
+	// Split the URL path params into segments
 	// and extract login, type, and project number
 	segments := strings.Split(u.Path, "/")
 	login := segments[2]
