@@ -7,6 +7,31 @@ import (
 	"github.com/widal001/ghloader/internal/graphql"
 )
 
+// Shared project and field metadata returned by the GraphQL API
+type projectV2Fragment struct {
+	ProjectV2 struct {
+		Id     string
+		Title  string
+		Fields struct {
+			Nodes []struct {
+				ID      string
+				Name    string
+				Type    string
+				Options []struct {
+					Id   string
+					Name string
+				}
+				Configuration struct {
+					Iterations []struct {
+						Id    string
+						Title string
+					}
+				}
+			}
+		}
+	}
+}
+
 // LoadProjectFields fetches all fields of a GitHub ProjectV2
 func LoadProjectMetadata(login string, projectNumber int, projectType string) (*ProjectV2, error) {
 	// Find and load the correct .graphql file based on project type
@@ -41,20 +66,6 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 		return nil, err
 	}
 
-	type projectV2Fragment struct {
-		ProjectV2 struct {
-			Id     string
-			Title  string
-			Fields struct {
-				Nodes []struct {
-					ID   string
-					Name string
-					Type string
-				}
-			}
-		}
-	}
-
 	// Parse the response JSON
 	var response struct {
 		Data struct {
@@ -66,29 +77,32 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 			}
 		}
 	}
-
 	if err := json.Unmarshal(responseBody, &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
 	}
 
-	var projectData projectV2Fragment
+	// Pluck the project metadata based on the project type
+	var projectMetadata projectV2Fragment
 	switch projectType {
 	case "users":
-		projectData = response.Data.User.projectV2Fragment
+		projectMetadata = response.Data.User.projectV2Fragment
 	case "orgs":
-		projectData = response.Data.Org.projectV2Fragment
+		projectMetadata = response.Data.Org.projectV2Fragment
 	}
 
-	// Map fields into a ProjectV2Info struct
+	// Map each field into a ProjectV2Field struct
 	fieldsMap := make(map[string]ProjectV2Field)
-	for _, node := range projectData.ProjectV2.Fields.Nodes {
+	for _, node := range projectMetadata.ProjectV2.Fields.Nodes {
 		fieldsMap[node.Name] = ProjectV2Field{
-			ID:   node.ID,
-			Name: node.Name,
-			Type: node.Type,
+			ID:         node.ID,
+			Name:       node.Name,
+			Type:       node.Type,
+			Options:    node.Options,
+			Iterations: node.Configuration.Iterations,
 		}
 	}
 
+	// Return the ProjectV2 struct with its parsed metadata and fields
 	return &ProjectV2{
 		Id:     response.Data.User.ProjectV2.Id,
 		Title:  response.Data.User.ProjectV2.Title,

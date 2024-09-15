@@ -3,10 +3,27 @@ fragment ProjectV2Metadata on ProjectV2 {
   title
   fields(first: 100) {
     nodes {
+      # shared metadata
       ... on ProjectV2FieldCommon {
         id
         name
         type: dataType
+      }
+      # iteration field metadata
+      ... on ProjectV2IterationField {
+        configuration {
+          iterations {
+            id
+            title
+          }
+        }
+      }
+      # single select field metadata
+      ... on ProjectV2SingleSelectField {
+        options {
+          id
+          name
+        }
       }
     }
   }

@@ -10,9 +10,17 @@ import (
 
 // Struct to represent a field in the project
 type ProjectV2Field struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	ID      string
+	Name    string
+	Type    string
+	Options []struct {
+		Id   string
+		Name string
+	}
+	Iterations []struct {
+		Id    string
+		Title string
+	}
 }
 
 // Struct to hold all fields from the ProjectV2

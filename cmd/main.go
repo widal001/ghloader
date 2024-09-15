@@ -25,4 +25,8 @@ func main() {
 		}
 		fmt.Printf("The type of '%s' field is: %s\n", fieldName, fieldType)
 	}
+	sprint := proj.Fields["Sprint"]
+	fmt.Printf("%v\n", sprint.Iterations)
+	status := proj.Fields["Status"]
+	fmt.Printf("%v\n", status.Options)
 }
