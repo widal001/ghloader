@@ -1,0 +1,10 @@
+fragment UpdateResponseFragment on UpdateProjectV2ItemFieldValuePayload {
+  projectV2Item {
+    id
+    content {
+      ... on Issue {
+        url
+      }
+    }
+  }
+}

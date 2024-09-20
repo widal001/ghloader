@@ -8,21 +8,6 @@ import (
 	"strings"
 )
 
-// Struct to represent a field in the project
-type ProjectV2Field struct {
-	ID      string
-	Name    string
-	Type    string
-	Options []struct {
-		Id   string
-		Name string
-	}
-	Iterations []struct {
-		Id    string
-		Title string
-	}
-}
-
 // Struct to hold all fields from the ProjectV2
 type ProjectV2 struct {
 	Login  string
@@ -31,15 +16,6 @@ type ProjectV2 struct {
 	Id     string
 	Title  string
 	Fields map[string]ProjectV2Field
-}
-
-// Method to get the type of a field by name
-func (p *ProjectV2) GetFieldType(fieldName string) (string, error) {
-	field, ok := p.Fields[fieldName]
-	if !ok {
-		return "", fmt.Errorf("field %s not found", fieldName)
-	}
-	return field.Type, nil
 }
 
 func FromURL(projectURL string) (*ProjectV2, error) {

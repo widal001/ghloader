@@ -17,16 +17,28 @@ func main() {
 		log.Fatalf("Error loading project fields: %v", err)
 	}
 
-	// Get the type of a specific field
+	// Print the type of each field
 	for fieldName := range proj.Fields {
-		fieldType, err := proj.GetFieldType(fieldName)
-		if err != nil {
+		field, ok := proj.Fields[fieldName]
+		if !ok {
 			log.Fatalf("Error getting field type: %v", err)
 		}
-		fmt.Printf("The type of '%s' field is: %s\n", fieldName, fieldType)
+		fmt.Printf("The ID of '%s' field is: %s\n", fieldName, field.ID)
 	}
-	sprint := proj.Fields["Sprint"]
-	fmt.Printf("%v\n", sprint.Iterations)
-	status := proj.Fields["Status"]
-	fmt.Printf("%v\n", status.Options)
+
+	// Update the value of each field
+	data := project.UpdateProps{
+		ItemId: "PVTI_lAHOAUXHu84AR8K0zgJRro4",
+		Fields: []project.FieldData{
+			{
+				Name:  "Status",
+				Value: "✅ Done",
+			},
+			{
+				Name:  "Sprint",
+				Value: "Sprint 12",
+			},
+		},
+	}
+	proj.UpsertProjectItem(data)
 }
