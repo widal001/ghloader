@@ -25,7 +25,11 @@ func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
 	// get the client
 	client := graphql.NewClient()
 	for _, field := range data.Fields {
-		go p.UpdateProjectItemField(*client, data.ItemId, field)
+		fmt.Printf("%s\n", field.Name)
+		err := p.UpdateProjectItemField(*client, data.ItemId, field)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	return nil
 }
@@ -70,9 +74,10 @@ func (proj *ProjectV2) UpdateProjectItemField(
 	// Make the update
 	response, err := client.Post(requestBody)
 	if err != nil {
+		fmt.Println(err)
 		return fmt.Errorf("failed to update field: %s", field.Name)
 	} else {
-		fmt.Printf("%v", string(response))
+		fmt.Printf("%v\n\n", string(response))
 	}
 	return nil
 }

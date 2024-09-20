@@ -38,6 +38,14 @@ func main() {
 				Name:  "Sprint",
 				Value: "Sprint 12",
 			},
+			{
+				Name:  "Story Points",
+				Value: "3",
+			},
+			{
+				Name:  "Due date",
+				Value: "2024-05-15",
+			},
 		},
 	}
 	proj.UpsertProjectItem(data)
