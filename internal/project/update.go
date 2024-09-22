@@ -21,6 +21,10 @@ type UpdateProps struct {
 	Fields []FieldData
 }
 
+// =================================================
+// Add or update project item
+// =================================================
+
 func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
 	// get the client
 	client := graphql.NewClient()
@@ -33,6 +37,10 @@ func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
 	}
 	return nil
 }
+
+// =================================================
+// Update project item
+// =================================================
 
 func (proj *ProjectV2) UpdateProjectItemField(
 	client graphql.Client,

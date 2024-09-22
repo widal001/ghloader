@@ -48,7 +48,6 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to load GraphQL query: %v", err)
 	}
-	fmt.Println(query)
 
 	// Create a request body for the GraphQL query
 	requestBody, err := json.Marshal(map[string]interface{}{

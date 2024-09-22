@@ -9,26 +9,25 @@ import (
 
 func main() {
 	// Example GitHub project details
-	url := "https://github.com/users/widal001/projects/3"
+	projURL := "https://github.com/users/widal001/projects/3"
+	issueURL := "https://github.com/widal001/project-demo/issues/52"
 
 	// Load the fields from the ProjectV2
-	proj, err := project.FromURL(url)
+	proj, err := project.FromURL(projURL)
 	if err != nil {
 		log.Fatalf("Error loading project fields: %v", err)
 	}
 
-	// Print the type of each field
-	for fieldName := range proj.Fields {
-		field, ok := proj.Fields[fieldName]
-		if !ok {
-			log.Fatalf("Error getting field type: %v", err)
-		}
-		fmt.Printf("The ID of '%s' field is: %s\n", fieldName, field.ID)
+	// Add an issue to the project and get its ID
+	itemId, err := proj.AddItemByURL(issueURL)
+	if err != nil {
+		log.Fatalf("Error adding issue to project: %v", err)
 	}
+	fmt.Printf("The project item ID is: %s\n\n", itemId)
 
 	// Update the value of each field
 	data := project.UpdateProps{
-		ItemId: "PVTI_lAHOAUXHu84AR8K0zgJRro4",
+		ItemId: itemId,
 		Fields: []project.FieldData{
 			{
 				Name:  "Status",
