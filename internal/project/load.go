@@ -7,6 +7,8 @@ import (
 	"github.com/widal001/ghloader/internal/graphql"
 )
 
+const metadataQueryDir string = "projectV2Metadata"
+
 // Shared project and field metadata returned by the GraphQL API
 type projectV2Fragment struct {
 	ProjectV2 struct {
@@ -38,14 +40,15 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 	var queryFile string
 	switch projectType {
 	case "orgs":
-		queryFile = "projectV2Metadata/queryOrg.graphql"
+		queryFile = metadataQueryDir + "/queryOrg.graphql"
 	case "users":
-		queryFile = "ProjectV2Metadata/queryUser.graphql"
+		queryFile = metadataQueryDir + "/queryUser.graphql"
 	}
-	query, err := graphql.LoadQuery(queryFile)
+	query, err := graphql.LoadQuery(queryFile, graphql.WithFragment(metadataQueryDir+"/fragments.graphql"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load GraphQL query: %v", err)
 	}
+	fmt.Println(query)
 
 	// Create a request body for the GraphQL query
 	requestBody, err := json.Marshal(map[string]interface{}{
