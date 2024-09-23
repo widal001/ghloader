@@ -1,5 +1,5 @@
 query ($login: String!, $projectNumber: Int!) {
-  user(login: $login) {
+  login: user(login: $login) {
     projectV2(number: $projectNumber) {
       ...ProjectV2Metadata
     }

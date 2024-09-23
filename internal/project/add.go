@@ -1,7 +1,6 @@
 package project
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/widal001/ghloader/internal/graphql"
@@ -23,29 +22,6 @@ func (proj *ProjectV2) AddItemByURL(url string) (string, error) {
 }
 
 func (proj *ProjectV2) AddItemByNodeId(nodeId string) (string, error) {
-	// Get the client
-	client := graphql.NewClient()
-	// Load the query
-	query, err := graphql.LoadQuery("projectV2AddItem/mutation.graphql")
-	if err != nil {
-		return "", err
-	}
-	// Create the requestBody
-	requestBody, err := json.Marshal(map[string]interface{}{
-		"query": query,
-		"variables": map[string]interface{}{
-			"projectId": proj.Id,
-			"issueId":   nodeId,
-		},
-	})
-	if err != nil {
-		return "", nil
-	}
-	// Make the API request
-	responseBody, err := client.Post(requestBody)
-	if err != nil {
-		return "", err
-	}
 	// Declare a struct that matches the expected response JSON
 	var response struct {
 		Data struct {
@@ -56,10 +32,21 @@ func (proj *ProjectV2) AddItemByNodeId(nodeId string) (string, error) {
 			} `json:"addProjectV2ItemById"`
 		}
 	}
-	// Unmarshal the JSON response into the struct
-	err = json.Unmarshal([]byte(responseBody), &response)
+	// Create the query
+	query := graphql.Query{
+		Options: graphql.QueryOptions{
+			QueryDir:  "queries/projectV2AddItem",
+			QueryPath: "mutation.graphql",
+		},
+		Vars: map[string]interface{}{
+			"issueId":   nodeId,
+			"projectId": proj.Id,
+		},
+	}
+	// Post the query
+	err := query.Post(&response)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
+		fmt.Printf("Failed to post query: %s\n", err)
 		return "", err
 	}
 	return response.Data.Update.Item.Id, nil
@@ -67,26 +54,6 @@ func (proj *ProjectV2) AddItemByNodeId(nodeId string) (string, error) {
 }
 
 func GetItemByURL(url string) (string, error) {
-	// Get the client
-	client := graphql.NewClient()
-	// Load the query
-	query, err := graphql.LoadQuery("projectV2AddItem/getItemByURL.graphql")
-	if err != nil {
-		return "", err
-	}
-	// Create the requestBody
-	requestBody, err := json.Marshal(map[string]interface{}{
-		"query":     query,
-		"variables": map[string]interface{}{"issueUrl": url},
-	})
-	if err != nil {
-		return "", err
-	}
-	// Make the API request
-	responseBody, err := client.Post(requestBody)
-	if err != nil {
-		return "", err
-	}
 	// Declare a struct that matches the expected response JSON
 	var response struct {
 		Data struct {
@@ -95,10 +62,18 @@ func GetItemByURL(url string) (string, error) {
 			}
 		}
 	}
-	// Unmarshal the JSON response into the struct
-	err = json.Unmarshal([]byte(responseBody), &response)
+	// Create the query
+	query := graphql.Query{
+		Options: graphql.QueryOptions{
+			QueryDir:  "queries/projectV2AddItem",
+			QueryPath: "getItemByUrl.graphql",
+		},
+		Vars: map[string]interface{}{"issueUrl": url},
+	}
+	// Post the query
+	err := query.Post(&response)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON:", err)
+		fmt.Printf("Failed to post query: %s\n", err)
 		return "", err
 	}
 	return response.Data.Resource.Id, nil

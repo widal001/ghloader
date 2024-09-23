@@ -1,33 +1,28 @@
 package project
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/widal001/ghloader/internal/graphql"
 )
 
-const metadataQueryDir string = "projectV2Metadata"
-
 // Shared project and field metadata returned by the GraphQL API
 type projectV2Fragment struct {
-	ProjectV2 struct {
-		Id     string
-		Title  string
-		Fields struct {
-			Nodes []struct {
-				ID      string
-				Name    string
-				Type    string
-				Options []struct {
-					Id   string
-					Name string
-				}
-				Configuration struct {
-					Iterations []struct {
-						Id    string
-						Title string
-					}
+	Id     string
+	Title  string
+	Fields struct {
+		Nodes []struct {
+			ID      string
+			Name    string
+			Type    string
+			Options []struct {
+				Id   string
+				Name string
+			}
+			Configuration struct {
+				Iterations []struct {
+					Id    string
+					Title string
 				}
 			}
 		}
@@ -40,61 +35,39 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 	var queryFile string
 	switch projectType {
 	case "orgs":
-		queryFile = metadataQueryDir + "/queryOrg.graphql"
-	case "users":
-		queryFile = metadataQueryDir + "/queryUser.graphql"
+		queryFile = "queryOrg.graphql"
+	default:
+		queryFile = "queryUser.graphql"
 	}
-	query, err := graphql.LoadQuery(queryFile, graphql.WithFragment(metadataQueryDir+"/fragments.graphql"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to load GraphQL query: %v", err)
-	}
-
-	// Create a request body for the GraphQL query
-	requestBody, err := json.Marshal(map[string]interface{}{
-		"query": query,
-		"variables": map[string]interface{}{
+	// Create the query
+	query := graphql.Query{
+		Options: graphql.QueryOptions{
+			QueryDir:      "queries/projectV2Metadata",
+			QueryPath:     queryFile,
+			FragmentPaths: []string{"fragments.graphql"},
+		},
+		Vars: map[string]interface{}{
 			"login":         login,
 			"projectNumber": projectNumber,
 		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request body: %v", err)
 	}
-
-	// Send request to GitHub GraphQL API
-	client := graphql.NewClient()
-	responseBody, err := client.Post(requestBody)
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse the response JSON
+	// Create a struct to parse the response body
 	var response struct {
 		Data struct {
-			User struct {
-				projectV2Fragment
-			}
-			Org struct {
-				projectV2Fragment
+			Login struct {
+				ProjectV2 projectV2Fragment
 			}
 		}
 	}
-	if err := json.Unmarshal(responseBody, &response); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+	// Post the query
+	err := query.Post(&response)
+	if err != nil {
+		fmt.Printf("Failed to post query: %s\n", err)
+		return nil, err
 	}
-
-	// Pluck the project metadata based on the project type
-	var projectMetadata projectV2Fragment
-	switch projectType {
-	case "users":
-		projectMetadata = response.Data.User.projectV2Fragment
-	case "orgs":
-		projectMetadata = response.Data.Org.projectV2Fragment
-	}
-
 	// Map each field into a ProjectV2Field struct
 	fieldsMap := make(map[string]ProjectV2Field)
-	for _, node := range projectMetadata.ProjectV2.Fields.Nodes {
+	for _, node := range response.Data.Login.ProjectV2.Fields.Nodes {
 		fieldsMap[node.Name] = ProjectV2Field{
 			ID:         node.ID,
 			Name:       node.Name,
@@ -106,8 +79,8 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 
 	// Return the ProjectV2 struct with its parsed metadata and fields
 	return &ProjectV2{
-		Id:     response.Data.User.ProjectV2.Id,
-		Title:  response.Data.User.ProjectV2.Title,
+		Id:     response.Data.Login.ProjectV2.Id,
+		Title:  response.Data.Login.ProjectV2.Title,
 		Fields: fieldsMap,
 	}, nil
 }

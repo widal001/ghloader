@@ -1,7 +1,6 @@
 package project
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/widal001/ghloader/internal/graphql"
@@ -47,45 +46,41 @@ func (proj *ProjectV2) UpdateProjectItemField(
 	itemId string,
 	fieldData FieldData,
 ) error {
-	// Load the query from the GraphQL file
-	query, err := graphql.LoadQuery("projectV2Update/mutation.graphql")
-	if err != nil {
-		return fmt.Errorf("failed to load GraphQL query: %v", err)
-	}
-
 	// Retrieve the field from the project using its name
 	field, ok := proj.Fields[fieldData.Name]
 	if !ok {
 		return fmt.Errorf("field %s not found", fieldData.Name)
 	}
-
 	// Set the value
 	value, err := field.FormatUpdateValue(fieldData.Value)
 	if err != nil {
 		return err
 	}
-
-	// Create a request body for the GraphQL query
-	requestBody, err := json.Marshal(map[string]interface{}{
-		"query": query,
-		"variables": map[string]interface{}{
+	// Create the query
+	query := graphql.Query{
+		Options: graphql.QueryOptions{
+			QueryDir:  "queries/projectV2Update",
+			QueryPath: "mutation.graphql",
+		},
+		Vars: map[string]interface{}{
 			"projectId": proj.Id,
 			"itemId":    itemId,
 			"fieldId":   field.ID,
 			"value":     value,
 		},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to marshal request body: %v", err)
 	}
-
-	// Make the update
-	response, err := client.Post(requestBody)
+	// Post the query
+	var response map[string]interface{}
+	err = query.Post(&response)
+	clientErrors, queryErr := response["errors"]
+	// Catch or return the errors
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed to update field: %s", field.Name)
+		fmt.Printf("Failed to post query: %s\n", err)
+		return err
+	} else if queryErr {
+		return fmt.Errorf("graphql client return the following errors: %v", clientErrors)
 	} else {
-		fmt.Printf("%v\n\n", string(response))
+		fmt.Printf("%v", response)
 	}
 	return nil
 }
