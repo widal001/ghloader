@@ -28,7 +28,7 @@ func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
 	// get the client
 	client := graphql.NewClient()
 	for _, field := range data.Fields {
-		fmt.Printf("%s\n", field.Name)
+		fmt.Printf("\n%s\n", field.Name)
 		err := p.UpdateProjectItemField(*client, data.ItemId, field)
 		if err != nil {
 			fmt.Println(err)
@@ -72,15 +72,11 @@ func (proj *ProjectV2) UpdateProjectItemField(
 	// Post the query
 	var response map[string]interface{}
 	err = query.Post(&response)
-	clientErrors, queryErr := response["errors"]
 	// Catch or return the errors
 	if err != nil {
-		fmt.Printf("Failed to post query: %s\n", err)
 		return err
-	} else if queryErr {
-		return fmt.Errorf("graphql client return the following errors: %v", clientErrors)
 	} else {
-		fmt.Printf("%v", response)
+		fmt.Printf("%v\n", response)
 	}
 	return nil
 }

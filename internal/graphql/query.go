@@ -61,12 +61,9 @@ func (q *Query) Post(response interface{}) error {
 		return err
 	}
 	// Check for errors
-	var errors struct {
-		Errors interface{}
-	}
-	json.Unmarshal([]byte(responseBody), &errors)
-	if errors.Errors != nil {
-		return fmt.Errorf("GitHub API raised the following errors: %s", errors.Errors)
+	errors, exist := ResponseHasErrors(responseBody)
+	if exist {
+		return fmt.Errorf("the following errors were returned: %v", errors)
 	}
 	// Unmarshal the JSON response into the struct
 	err = json.Unmarshal([]byte(responseBody), &response)
