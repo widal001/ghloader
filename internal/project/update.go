@@ -2,6 +2,7 @@ package project
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/widal001/ghloader/internal/graphql"
 )
@@ -15,23 +16,47 @@ type FieldData struct {
 	Value string
 }
 
-type UpdateProps struct {
-	ItemId string
-	Fields []FieldData
+type ItemData struct {
+	ItemURL string
+	Fields  []FieldData
 }
 
 // =================================================
 // Add or update project item
 // =================================================
 
-func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
-	// get the client
-	client := graphql.NewClient()
+func (p *ProjectV2) UpsertItem(data ItemData) error {
+	// Add the item to the project and get its ID
+	itemId, err := p.AddItemByURL(data.ItemURL)
+	if err != nil {
+		return fmt.Errorf("failed to add item with URL %s: %w", data.ItemURL, err)
+	}
+
+	// Create the wait group and the error channel to synchronize errors
+	var wg sync.WaitGroup
+	errorsChan := make(chan error, len(data.Fields)) // To capture errors from goroutines
+
+	// Update fields
 	for _, field := range data.Fields {
-		fmt.Printf("\n%s\n", field.Name)
-		err := p.UpdateProjectItemField(*client, data.ItemId, field)
+		wg.Add(1) // Increment the WaitGroup counter for each field
+		go func(f FieldData) {
+			defer wg.Done() // Decrement the counter when the goroutine completes
+
+			err := p.UpdateItemField(itemId, f)
+			if err != nil {
+				errorsChan <- fmt.Errorf("failed to update field %s: %w", f.Name, err)
+			}
+		}(field) // Pass field as an argument to avoid data races
+	}
+
+	// Wait for all goroutines to finish and close the channel
+	wg.Wait()
+	close(errorsChan)
+
+	// Check if any errors were returned
+	for err := range errorsChan {
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err) // Handle or log the error
 		}
 	}
 	return nil
@@ -41,8 +66,7 @@ func (p *ProjectV2) UpsertProjectItem(data UpdateProps) error {
 // Update project item
 // =================================================
 
-func (proj *ProjectV2) UpdateProjectItemField(
-	client graphql.Client,
+func (proj *ProjectV2) UpdateItemField(
 	itemId string,
 	fieldData FieldData,
 ) error {

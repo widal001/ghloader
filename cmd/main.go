@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/widal001/ghloader/internal/project"
@@ -18,16 +17,9 @@ func main() {
 		log.Fatalf("Error loading project fields: %v", err)
 	}
 
-	// Add an issue to the project and get its ID
-	itemId, err := proj.AddItemByURL(issueURL)
-	if err != nil {
-		log.Fatalf("Error adding issue to project: %v", err)
-	}
-	fmt.Printf("The project item ID is: %s\n\n", itemId)
-
 	// Update the value of each field
-	data := project.UpdateProps{
-		ItemId: itemId,
+	data := project.ItemData{
+		ItemURL: issueURL,
 		Fields: []project.FieldData{
 			{
 				Name:  "Status",
@@ -47,5 +39,5 @@ func main() {
 			},
 		},
 	}
-	proj.UpsertProjectItem(data)
+	proj.UpsertItem(data)
 }
