@@ -53,6 +53,7 @@ func ItemsFromCSV(data []map[string]string, urlField string) ([]ItemData, error)
 
 func (p *ProjectV2) BatchUpsertItems(items []ItemData) {
 	for _, item := range items {
+		fmt.Printf("Upserting item with url: %s\n", item.ItemURL)
 		// Increment the WaitGroup counter for each item
 		err := p.UpsertItem(item)
 		if err != nil {
