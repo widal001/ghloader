@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 const URL = "https://api.github.com/graphql"
@@ -18,6 +21,12 @@ type Client struct {
 
 // NewClient creates a new GitHub GraphQL API client with the provided token.
 func NewClient() *Client {
+	// Load variables from a .env file in the working directory
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	// Create a new client with that token
 	return &Client{
 		token: os.Getenv("GITHUB_TOKEN"),
 		URL:   URL,
