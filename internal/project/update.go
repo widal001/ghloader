@@ -22,6 +22,46 @@ type ItemData struct {
 }
 
 // =================================================
+// Load item data
+// =================================================
+
+func ItemsFromCSV(data []map[string]string, urlField string) ([]ItemData, error) {
+	var items []ItemData
+	for _, row := range data {
+		// Get the URL for the item to add
+		url, ok := row[urlField]
+		if !ok {
+			return items, fmt.Errorf("missing a URL field")
+		}
+		// Create the item
+		item := ItemData{ItemURL: url}
+		// Populate the item's fields from the other columns
+		for field, val := range row {
+			if field == urlField {
+				continue
+			}
+			item.Fields = append(item.Fields, FieldData{Name: field, Value: val})
+		}
+		items = append(items, item)
+	}
+	return items, nil
+}
+
+// =================================================
+// Add or update multiple project items
+// =================================================
+
+func (p *ProjectV2) BatchUpsertItems(items []ItemData) {
+	for _, item := range items {
+		// Increment the WaitGroup counter for each item
+		err := p.UpsertItem(item)
+		if err != nil {
+			fmt.Printf("failed to update field %s: %s", item.ItemURL, err.Error())
+		}
+	}
+}
+
+// =================================================
 // Add or update project item
 // =================================================
 
@@ -32,9 +72,9 @@ func (p *ProjectV2) UpsertItem(data ItemData) error {
 		return fmt.Errorf("failed to add item with URL %s: %w", data.ItemURL, err)
 	}
 
-	// Create the wait group and the error channel to synchronize errors
+	// Create the wait group and the error channel to capture errors from goroutine
 	var wg sync.WaitGroup
-	errorsChan := make(chan error, len(data.Fields)) // To capture errors from goroutines
+	errorsChan := make(chan error, len(data.Fields))
 
 	// Update fields
 	for _, field := range data.Fields {
@@ -63,7 +103,7 @@ func (p *ProjectV2) UpsertItem(data ItemData) error {
 }
 
 // =================================================
-// Update project item
+// Update project item metadata
 // =================================================
 
 func (proj *ProjectV2) UpdateItemField(
@@ -99,8 +139,6 @@ func (proj *ProjectV2) UpdateItemField(
 	// Catch or return the errors
 	if err != nil {
 		return err
-	} else {
-		fmt.Printf("%v\n", response)
 	}
 	return nil
 }
