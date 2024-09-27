@@ -1,6 +1,6 @@
 APP=target/ghloader
 
-.PHONY: configure setup install run
+.PHONY: configure setup install cli web
 
 setup: configure install
 
@@ -10,8 +10,19 @@ configure:
 install:
 	go build -o $(APP) ./cmd
 
-run: url file
-	$(APP) $(url) $(file)
+cli: url file
+	$(APP) -url $(url) -file $(file)
+
+web-up: install
+	@echo "Starting the web application in the background"
+	$(APP) -web &
+	sleep 2
+	open http://localhost:8080
+	@echo "View the web app at http://localhost:8080"
+
+web-down:
+	@echo "Tearing down the web application"
+	pkill -f "$(APP) -web"
 
 # Ensure 'url' and 'file' are passed
 url:
