@@ -16,6 +16,8 @@ cli: url file
 web-up: install
 	@echo "Starting the web application in the background"
 	$(APP) -web &
+	sleep 2
+	open http://localhost:8080
 	@echo "View the web app at http://localhost:8080"
 
 web-down:
