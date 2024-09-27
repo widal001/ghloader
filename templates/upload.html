@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bulk update</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="min-h-screen flex items-center justify-center bg-gray-100">
+      <div
+        class="bg-white p-6 mx-4 rounded-lg shadow-md w-full max-w-md lg:max-w-lg"
+      >
+        <h2 class="text-2xl font-bold mb-5 lg:text-3xl">
+          Bulk update your GitHub project
+        </h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+          <div class="mb-4">
+            <label
+              for="urlInput"
+              class="block text-sm font-medium text-gray-700"
+            >
+              URL of the GitHub project to update
+              <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              id="urlInput"
+              name="url"
+              required
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus: outline-none focus:ring-2 focus:ring-gray-500"
+            />
+          </div>
+          <div class="mb-4">
+            <label
+              for="fileInput"
+              class="block text-sm font-medium text-gray-700"
+            >
+              CSV or TSV with project data <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="file"
+              accept=".csv,.tsv"
+              id="fileInput"
+              name="file"
+              required
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+          >
+            Upload
+          </button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
