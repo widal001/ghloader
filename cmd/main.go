@@ -1,38 +1,51 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/widal001/ghloader/internal/csvloader"
 	"github.com/widal001/ghloader/internal/project"
+	"github.com/widal001/ghloader/internal/web"
 )
 
 func main() {
-	// Parse the command line arguments
-	if len(os.Args) != 3 {
-		log.Fatal(`
-This script expects exactly two positional args:
-1. The URL of the project to update
-2. A path to a source CSV or TSV with data to use during the update
-`)
-	}
-	projURL := os.Args[1]
-	updateCSV := os.Args[2]
+	// Define flags for web and CLI modes
+	webMode := flag.Bool("web", false, "Run the application in web server mode")
+	port := flag.String("port", "8080", "Port to run the web server on")
+	flag.Parse()
 
-	// Load the fields from the ProjectV2
-	proj, err := project.FromURL(projURL)
+	if *webMode {
+		web.RunServer(*port)
+	} else {
+		runCLI()
+	}
+}
+
+func runCLI() {
+	// Parse the command line arguments
+	projURL := flag.String("url", "", "URL of the project to update")
+	updateCSV := flag.String("file", "", "Path to the file with data used to update the project")
+	if *projURL != "" {
+		log.Fatal("To use the CLI, you must pass the URL a GitHub project to the -url flag.")
+	}
+	if *updateCSV != "" {
+		log.Fatal("To use the CLI, you must pass the path of a CSV or TSV file -file flag.")
+	}
+
+	// Load the contents of the csv
+	contents, err := csvloader.LoadCSVFromPath(*updateCSV)
+	if err != nil {
+		log.Fatalf("Error loading CSV: %v", updateCSV)
+	}
+
+	// Load the project metadata from the URL
+	proj, err := project.FromURL(*projURL)
 	if err != nil {
 		log.Fatalf("Error loading project fields: %v", err)
 	}
 	fmt.Printf("Project has %d fields\n", len(proj.Fields))
-
-	// Load the contents of the csv
-	contents, err := csvloader.LoadCSV(updateCSV)
-	if err != nil {
-		log.Fatalf("Error loading CSV: %v", updateCSV)
-	}
 
 	// Parse those contents into items to insert or update on the project
 	items, err := project.ItemsFromCSV(contents, "URL")
