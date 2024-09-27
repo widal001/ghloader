@@ -35,7 +35,7 @@ func TestLoadCSV(t *testing.T) {
 	// Arrange
 	path := filepath.Join("testdata", "test.csv")
 	// Act
-	got, err := LoadCSV(path)
+	got, err := LoadCSVFromPath(path)
 	// Assert
 	if err != nil {
 		t.Fatalf("unexpected error loading csv: %v", err)
@@ -50,7 +50,7 @@ func TestLoadTSV(t *testing.T) {
 	// Arrange
 	path := filepath.Join("testdata", "test.tsv")
 	// Act
-	got, err := LoadCSV(path)
+	got, err := LoadCSVFromPath(path)
 	// Assert
 	if err != nil {
 		t.Fatalf("unexpected error loading csv: %v", err)
