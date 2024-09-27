@@ -54,6 +54,9 @@ func runCLI() {
 	}
 
 	// Update or insert the parsed items
-	proj.BatchUpsertItems(items)
+	updated, _ := proj.BatchUpsertItems(items)
+	for _, item := range updated {
+		fmt.Printf("Updated item with URL: %s", item)
+	}
 
 }

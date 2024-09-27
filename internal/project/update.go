@@ -51,15 +51,19 @@ func ItemsFromCSV(data []map[string]string, urlField string) ([]ItemData, error)
 // Add or update multiple project items
 // =================================================
 
-func (p *ProjectV2) BatchUpsertItems(items []ItemData) {
+func (p *ProjectV2) BatchUpsertItems(items []ItemData) ([]string, bool) {
+	var updated []string
+	var ok = true
 	for _, item := range items {
-		fmt.Printf("Upserting item with url: %s\n", item.ItemURL)
 		// Increment the WaitGroup counter for each item
 		err := p.UpsertItem(item)
 		if err != nil {
-			fmt.Printf("failed to update field %s: %s", item.ItemURL, err.Error())
+			fmt.Printf("failed to update item %s: %s", item.ItemURL, err.Error())
+			ok = false
 		}
+		updated = append(updated, item.ItemURL)
 	}
+	return updated, ok
 }
 
 // =================================================
