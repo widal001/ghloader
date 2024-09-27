@@ -11,37 +11,39 @@ import (
 )
 
 func main() {
-	// Define flags for web and CLI modes
+	// Define flags for web mode
 	webMode := flag.Bool("web", false, "Run the application in web server mode")
 	port := flag.String("port", "8080", "Port to run the web server on")
+	// Define the flags for CLI mode
+	projURL := flag.String("url", "", "URL of the project to update")
+	updateCSV := flag.String("file", "", "Path to the file with data used to update the project")
+	// Parse the flags
 	flag.Parse()
 
 	if *webMode {
 		web.RunServer(*port)
 	} else {
-		runCLI()
+		runCLI(*projURL, *updateCSV)
 	}
 }
 
-func runCLI() {
+func runCLI(projURL, updateCSV string) {
 	// Parse the command line arguments
-	projURL := flag.String("url", "", "URL of the project to update")
-	updateCSV := flag.String("file", "", "Path to the file with data used to update the project")
-	if *projURL != "" {
+	if projURL == "" {
 		log.Fatal("To use the CLI, you must pass the URL a GitHub project to the -url flag.")
 	}
-	if *updateCSV != "" {
+	if updateCSV == "" {
 		log.Fatal("To use the CLI, you must pass the path of a CSV or TSV file -file flag.")
 	}
 
 	// Load the contents of the csv
-	contents, err := csvloader.LoadCSVFromPath(*updateCSV)
+	contents, err := csvloader.LoadCSVFromPath(updateCSV)
 	if err != nil {
 		log.Fatalf("Error loading CSV: %v", updateCSV)
 	}
 
 	// Load the project metadata from the URL
-	proj, err := project.FromURL(*projURL)
+	proj, err := project.FromURL(projURL)
 	if err != nil {
 		log.Fatalf("Error loading project fields: %v", err)
 	}
@@ -56,7 +58,7 @@ func runCLI() {
 	// Update or insert the parsed items
 	updated, _ := proj.BatchUpsertItems(items)
 	for _, item := range updated {
-		fmt.Printf("Updated item with URL: %s", item)
+		fmt.Printf("Updated item with URL: %s\n", item)
 	}
 
 }
