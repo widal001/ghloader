@@ -8,7 +8,7 @@ import (
 
 // Struct to represent a field in the project
 type ProjectV2Field struct {
-	ID      string
+	Id      string
 	Name    string
 	Type    string
 	Options []struct {

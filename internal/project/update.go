@@ -134,7 +134,7 @@ func (proj *ProjectV2) UpdateItemField(
 		Vars: map[string]interface{}{
 			"projectId": proj.Id,
 			"itemId":    itemId,
-			"fieldId":   field.ID,
+			"fieldId":   field.Id,
 			"value":     value,
 		},
 	}

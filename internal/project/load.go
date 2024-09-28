@@ -12,7 +12,7 @@ type projectV2Fragment struct {
 	Title  string
 	Fields struct {
 		Nodes []struct {
-			ID      string
+			Id      string
 			Name    string
 			Type    string
 			Options []struct {
@@ -69,7 +69,7 @@ func LoadProjectMetadata(login string, projectNumber int, projectType string) (*
 	fieldsMap := make(map[string]ProjectV2Field)
 	for _, node := range response.Data.Login.ProjectV2.Fields.Nodes {
 		fieldsMap[node.Name] = ProjectV2Field{
-			ID:         node.ID,
+			Id:         node.Id,
 			Name:       node.Name,
 			Type:       node.Type,
 			Options:    node.Options,
