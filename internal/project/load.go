@@ -12,18 +12,12 @@ type projectV2Fragment struct {
 	Title  string
 	Fields struct {
 		Nodes []struct {
-			Id      string
-			Name    string
-			Type    string
-			Options []struct {
-				Id   string
-				Name string
-			}
+			Id            string
+			Name          string
+			Type          string
+			Options       []Option
 			Configuration struct {
-				Iterations []struct {
-					Id    string
-					Title string
-				}
+				Iterations []Iteration
 			}
 		}
 	}

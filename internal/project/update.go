@@ -1,10 +1,12 @@
 package project
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 
 	"github.com/widal001/ghloader/internal/graphql"
+	"github.com/widal001/ghloader/internal/utils"
 )
 
 // =================================================
@@ -146,4 +148,41 @@ func (proj *ProjectV2) UpdateItemField(
 		return err
 	}
 	return nil
+}
+
+// =================================================
+// Generate update query
+// =================================================
+
+func (p *ProjectV2) GenerateUpdateQuery(
+	tmplDir string,
+	itemId string,
+	fields []FieldData,
+) (string, error) {
+	// Load the query template
+	tmpl, err := utils.LoadTemplate(tmplDir, "updateProjectField.graphql")
+	if err != nil {
+		return "", err
+	}
+	// Format the field data for the template
+	var tmplFields []fieldProps
+	for _, f := range fields {
+		// Retrieve the field from the project using its name
+		field, ok := p.Fields[f.Name]
+		if !ok {
+			fmt.Printf("field %s not found", f.Name)
+			continue
+		}
+		// Format the field for the query template
+		fieldData, err := field.formatFieldProps(f.Value)
+		if err != nil {
+			fmt.Printf("error formatting field %s: %s", f.Name, err)
+			continue
+		}
+		tmplFields = append(tmplFields, fieldData)
+	}
+	// Render the query template and return it as a string
+	var query bytes.Buffer
+	tmpl.Execute(&query, tmplFields)
+	return query.String(), nil
 }
