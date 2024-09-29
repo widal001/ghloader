@@ -54,7 +54,7 @@ func assertContains(t *testing.T, got, wanted string) {
 
 func TestGenerateUpdateQuery(t *testing.T) {
 	// Act
-	got, err := testProj.GenerateUpdateQuery(tmplDir, "foobar", testData)
+	got, err := testProj.GenerateUpdateQuery(tmplDir, testData)
 	// Assert - rendered correctly
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
