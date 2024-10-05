@@ -8,8 +8,9 @@ import (
 )
 
 type Query struct {
-	Options QueryOptions
-	Vars    map[string]interface{}
+	QueryStr string
+	Options  QueryOptions
+	Vars     map[string]interface{}
 }
 
 type QueryOptions struct {
@@ -42,14 +43,17 @@ func (q *Query) LoadFromFile() (string, error) {
 func (q *Query) Post(response interface{}) error {
 	// Get the client
 	client := NewClient()
-	// Load the query
-	query, err := q.LoadFromFile()
-	if err != nil {
-		return err
+	// Load the query if not already set
+	if q.QueryStr == "" {
+		query, err := q.LoadFromFile()
+		if err != nil {
+			return err
+		}
+		q.QueryStr = query
 	}
 	// Create the requestBody
 	requestBody, err := json.Marshal(map[string]interface{}{
-		"query":     query,
+		"query":     q.QueryStr,
 		"variables": q.Vars,
 	})
 	if err != nil {

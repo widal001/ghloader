@@ -1,0 +1,26 @@
+mutation ($projectId: ID!, $itemId: ID!) {
+  {{ range . }}
+  {{ .Key }}: updateProjectV2ItemFieldValue(
+    input: {
+      projectId: $projectId
+      itemId: $itemId
+      fieldId: "{{ .Id }}"
+      value: {{ .Value }}
+    }
+  ) {
+    ...UpdateResponseFragment
+  }
+  {{ end }}
+}
+
+
+fragment UpdateResponseFragment on UpdateProjectV2ItemFieldValuePayload {
+  projectV2Item {
+    id
+    content {
+      ... on Issue {
+        url
+      }
+    }
+  }
+}

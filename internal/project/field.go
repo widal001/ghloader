@@ -3,76 +3,109 @@ package project
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
-// Struct to represent a field in the project
-type ProjectV2Field struct {
-	ID      string
-	Name    string
-	Type    string
-	Options []struct {
-		Id   string
-		Name string
-	}
-	Iterations []struct {
-		Id    string
-		Title string
-	}
+type Option struct {
+	Id   string
+	Name string
 }
 
-func (f *ProjectV2Field) FormatUpdateValue(strVal string) (map[string]interface{}, error) {
+type Iteration struct {
+	Id    string
+	Title string
+}
+
+// Struct to represent a field in the project
+type ProjectV2Field struct {
+	Id         string
+	Name       string
+	Type       string
+	Options    []Option
+	Iterations []Iteration
+}
+
+type fieldProps struct {
+	Key   string
+	Id    string
+	Value string
+}
+
+// format a field's name
+func (f *ProjectV2Field) formatUpdateKey() string {
+	key := strings.ReplaceAll(f.Name, " ", "")
+	return strings.ToLower(key)
+}
+
+// Format the fieldProps used to generate the GraphQL mutation query for a given field
+func (f *ProjectV2Field) formatFieldProps(strVal string) (fieldProps, error) {
+	// Format the update value
+	value, err := f.FormatUpdateValue(strVal)
+	if err != nil {
+		return fieldProps{}, err
+	}
+	// Return the fieldProps
+	return fieldProps{
+		Id:    f.Id,
+		Key:   f.formatUpdateKey(),
+		Value: value,
+	}, nil
+}
+
+// Format the `value` param for the input field in the updateProjectV2ItemFieldValue GraphQL mutation
+func (f *ProjectV2Field) FormatUpdateValue(strVal string) (string, error) {
 	switch f.Type {
 	case "NUMBER":
-		return f.FormatNumberInput(strVal)
+		return f.formatNumberInput(strVal)
 	case "TITLE":
-		return map[string]interface{}{"text": strVal}, nil
+		return fmt.Sprintf("{text: \"%s\"}", strVal), nil
 	case "DATE":
-		return f.FormatDateInput(strVal)
+		return f.formatDateInput(strVal)
 	case "SINGLE_SELECT":
-		return f.FormatSingleSelectInput(strVal)
+		return f.formatSingleSelectInput(strVal)
 	case "ITERATION":
-		return f.FormatIterationInput(strVal)
+		return f.formatIterationInput(strVal)
 	default:
 		// if its not one of the field types above, skip the update
-		return make(map[string]interface{}), nil
+		return "", nil
 	}
 }
 
 // Format the input value for a SingleSelect field
-func (f *ProjectV2Field) FormatSingleSelectInput(input string) (map[string]interface{}, error) {
+func (f *ProjectV2Field) formatSingleSelectInput(input string) (string, error) {
 	for _, opt := range f.Options {
 		if opt.Name == input {
-			return map[string]interface{}{"singleSelectOptionId": opt.Id}, nil
+			return fmt.Sprintf("{singleSelectOptionId: \"%s\"}", opt.Id), nil
 		}
 	}
-	return make(map[string]interface{}), fmt.Errorf("%s isn't a valid option for field %s", input, f.Name)
+	return "", fmt.Errorf("%s isn't a valid option for field %s", input, f.Name)
 }
 
 // Format the input value for an Iteration field
-func (f *ProjectV2Field) FormatIterationInput(name string) (map[string]interface{}, error) {
+func (f *ProjectV2Field) formatIterationInput(name string) (string, error) {
 	for _, iteration := range f.Iterations {
 		if iteration.Title == name {
-			return map[string]interface{}{"iterationId": iteration.Id}, nil
+			return fmt.Sprintf("{iterationId: \"%s\"}", iteration.Id), nil
 		}
 	}
-	return make(map[string]interface{}), fmt.Errorf("%s isn't a valid iteration for this field", name)
+	return "", fmt.Errorf("%s isn't a valid iteration for this field", name)
 }
 
 // Format the input value for a Date field
-func (f *ProjectV2Field) FormatDateInput(input string) (map[string]interface{}, error) {
+func (f *ProjectV2Field) formatDateInput(input string) (string, error) {
 	date, err := time.Parse("2006-01-02", input)
 	if err != nil {
-		return make(map[string]interface{}), fmt.Errorf("%s is not a valid date", input)
+		return "", fmt.Errorf("%s is not a valid date", input)
 	}
-	return map[string]interface{}{"date": date}, nil
+	return fmt.Sprintf("{date: \"%s\"}", date.Format("2006-01-02")), nil
 }
 
 // Format the input value for a Number field
-func (f *ProjectV2Field) FormatNumberInput(input string) (map[string]interface{}, error) {
+func (f *ProjectV2Field) formatNumberInput(input string) (string, error) {
 	floatVal, err := strconv.ParseFloat(input, 64)
 	if err != nil {
-		return make(map[string]interface{}), fmt.Errorf("%s is not a valid number", input)
+		return "", fmt.Errorf("%s is not a valid number", input)
 	}
-	return map[string]interface{}{"number": floatVal}, nil
+	return fmt.Sprintf("{number: %f}", floatVal), nil
 }
